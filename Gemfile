@@ -2,6 +2,9 @@ source "http://rubygems.org"
 gemspec
 
 
+gem 'pg'
+gem 'bcrypt-ruby'
+
 # Gems for authenticators
 group :ldap do
     gem "net-ldap", "~> 0.1.1"

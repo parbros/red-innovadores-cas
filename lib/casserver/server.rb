@@ -442,6 +442,8 @@ module CASServer
             :service => @service,
             :request => @env
           )
+          
+          
           if credentials_are_valid
             @authenticated = true
             @authenticated_username = @username
