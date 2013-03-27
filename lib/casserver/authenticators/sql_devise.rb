@@ -17,6 +17,8 @@ class CASServer::Authenticators::SQLDevise < CASServer::Authenticators::SQL
     password_column = @options[:password_column] || "encrypted_password"
 
     results = user_model.find(:all, :conditions => ["#{username_column} = ?", @username])
+    
+    puts "#{username_column} = #{@username}"
 
     if results.size > 0
       user = results.first

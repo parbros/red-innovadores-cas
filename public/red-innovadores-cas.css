@@ -1,0 +1,31 @@
+body {
+  background: url('white_wall_hash.png');
+  text-align: center;
+  padding: 50px 0 0 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+img#logo-login {
+  margin: 0 0 50px 0;
+}
+
+input {
+  font-family: 'Open Sans', sans-serif;
+}
+
+input[type=text], input[type=password] {
+  background-color: #E2E2E2;
+  display: block;
+  width: 450px;
+  margin: 0 auto;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  border-radius: 0px;
+  height: 40px;
+}
+
+#login-submit {
+  width: 450px;
+  height: 40px;
+  margin: 30px auto 0 auto;
+}
