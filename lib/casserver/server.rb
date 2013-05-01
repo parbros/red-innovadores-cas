@@ -742,23 +742,27 @@ module CASServer
 
     get "#{uri_path}/users.json" do
       user_model = CASServer::Authenticators::SQLDevise.user_model
-      users = user_model.all
-      users.to_json
+      users = if params.empty?
+          user_model.all
+        else
+          user_model.where(params[:search])
+        end
+      users.to_json(root: false)
     end
     
     get "#{uri_path}/users/:id.json" do
       user_model = CASServer::Authenticators::SQLDevise.user_model
       user = user_model.find params[:id]
-      user.to_json
+      user.to_json(root: false)
     end
 
     post "#{uri_path}/users.json" do
       user_model = CASServer::Authenticators::SQLDevise.user_model
       user = user_model.new params[:user]
       if user.save
-        user.to_json
+        user.to_json(root: false)
       else
-        user.to_json
+        user.to_json(root: false)
       end
     end
     
@@ -766,9 +770,9 @@ module CASServer
       user_model = CASServer::Authenticators::SQLDevise.user_model
       user = user_model.find params[:id]
       if user.update_attibutes params[:user]
-        user.to_json
+        user.to_json(root: false)
       else
-        user.to_json
+        user.to_json(root: false)
       end
     end
     
