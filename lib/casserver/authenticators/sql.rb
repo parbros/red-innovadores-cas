@@ -62,17 +62,29 @@ class CASServer::Authenticators::SQL < CASServer::Authenticators::Base
       class #{user_model_name} < ActiveRecord::Base
       end
     }
+    
+    class_eval %{
+      class CASUser_Authentication < ActiveRecord::Base
+      end
+    }
+    
+    @authentication_model = const_get("CASUser_Authentication")
+    @authentication_model.establish_connection(options[:database])
 
     @user_model = const_get(user_model_name)
     @user_model.establish_connection(options[:database])
     if ActiveRecord::VERSION::STRING >= '3.2'
       @user_model.table_name = (options[:user_table] || 'users')
+      @authentication_model.table_name = (options[:authentication_table] || 'authentications')
     else
       @user_model.set_table_name(options[:user_table] || 'users')
+      @authentication_model.set_table_name(options[:authentication_table] || 'authentications')
     end
     @user_model.inheritance_column = 'no_inheritance_column' if options[:ignore_type_column]
+    @authentication_model.inheritance_column = 'no_inheritance_column' if options[:ignore_type_column]
     begin
      @user_model.connection
+     @authentication_model.connection
     rescue => e
       $LOG.debug e
       raise "SQL Authenticator can not connect to database"
@@ -81,6 +93,10 @@ class CASServer::Authenticators::SQL < CASServer::Authenticators::Base
 
   def self.user_model
     @user_model
+  end
+  
+  def self.authentication_model
+    @authentication_model
   end
 
   def validate(credentials)

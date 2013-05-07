@@ -1,6 +1,9 @@
 require 'casserver/utils'
 require 'casserver/cas'
 require 'casserver/base'
+require 'omniauth'
+require 'omniauth-twitter'
+require 'omniauth-facebook'
 
 module CASServer
   class Server < CASServer::Base
@@ -13,6 +16,13 @@ module CASServer
     end
 
     include CASServer::CAS # CAS protocol helpers
+    
+    enable :sessions
+    
+    use OmniAuth::Builder do
+      provider :facebook, "150494841794659", "f73d40803e4deb52af325c2bd58a6ac8"
+      provider :twitter, "mnadEbTL7ALQ6xI5eW4Heg", "FEg8dxGthM7hetX1CKp9WRvZpqsnpAihM6rcadTVk"
+    end
 
     # Use :public_folder for Sinatra >= 1.3, and :public for older versions.
     def self.use_public_folder?
@@ -181,6 +191,7 @@ module CASServer
       end
     end
 
+
     def self.init_authenticators!
       auth = []
 
@@ -265,6 +276,18 @@ module CASServer
       end
 
       ActiveRecord::Base.establish_connection(config[:database])
+    end
+    
+    def extract_name(name)
+      name_splited = name.split(' ')
+      case name_splited.size
+      when 2
+        return [name_splited[0], name_splited[1]]
+      when 3
+        return [name_splited[0] , "#{name_splited[1]} #{name_splited[2]}"]
+      when 4
+        return ["#{name_splited[0]} #{name_splited[1]}", "#{name_splited[2]} #{name_splited[3]}"]
+      end
     end
 
     configure do
@@ -776,6 +799,106 @@ module CASServer
       end
     end
     
+    #
+    # Omniauth Auth
+    #
+    get "#{uri_path}/auth/:provider/callback" do
+      authentication_model = CASServer::Authenticators::SQLDevise.authentication_model
+      user_model = CASServer::Authenticators::SQLDevise.user_model
+      
+      auth_hash = request.env['omniauth.auth']
+      auth_info_hash = auth_hash['extra']['raw_info']
+
+      authorization = authentication_model.where(provider: auth_hash["provider"], uid: auth_hash["uid"]).first
+        
+      extra_attributes = {}
+      
+      puts auth_hash
+
+      @username = auth_info_hash['screen_name']    
+      if authorization
+        
+        
+        # generate another login ticket to allow for re-submitting the form after a post
+        @lt = generate_login_ticket.ticket
+        @service = clean_service_url("http://localhost:3000/refinery/users/service")
+        
+        begin
+          tgt = generate_ticket_granting_ticket(@username, extra_attributes)
+          response.set_cookie('tgt', tgt.to_s)
+          
+          if @service.blank?
+            $LOG.info("Successfully authenticated user '#{@username}' at '#{tgt.client_hostname}'. No service param was given, so we will not redirect.")
+            @message = {:type => 'confirmation', :message => t.notice.success_logged_in}
+          else
+            @st = generate_service_ticket(@service, @username, tgt)
+
+            begin
+              service_with_ticket = service_uri_with_ticket(@service, @st)
+
+              $LOG.info("Redirecting authenticated user '#{@username}' at '#{@st.client_hostname}' to service '#{@service}'")
+              redirect service_with_ticket, 303 # response code 303 means "See Other" (see Appendix B in CAS Protocol spec)
+            rescue URI::InvalidURIError
+              $LOG.error("The service '#{@service}' is not a valid URI!")
+              @message = {
+                :type => 'mistake',
+                :message => t.error.invalid_target_service
+              }
+            end
+          end
+        rescue CASServer::AuthenticatorError => e
+          $LOG.error(e)
+          # generate another login ticket to allow for re-submitting the form
+          @lt = generate_login_ticket.ticket
+          @message = {:type => 'mistake', :message => e.to_s}
+          status 401
+        end
+      else
+        name = extract_name(auth_info_hash["name"])
+        password_salt = BCrypt::Engine.generate_salt
+        password = BCrypt::Engine.hash_secret("#{@username}", password_salt)
+        user = user_model.create(
+            :first_name => name.first, 
+            :last_name => name.last, 
+            :email => "#{@username}@redinnovacion.org", 
+            username: @username, 
+            enabled: true, 
+            seen: true, 
+            rejected: 'NO', 
+            member_until: 10.year.from_now, 
+            membership_level: "Refinery::Memberships::Member",
+            registration_completed: false,
+            encrypted_password: password
+        )
+        authorization = authentication_model.create :provider => auth_hash["provider"], :uid => auth_hash["uid"], user_id: user.id
+        
+        begin
+          tgt = generate_ticket_granting_ticket(@username, extra_attributes)
+          response.set_cookie('tgt', tgt.to_s)
+          
+          if @service.blank?
+            $LOG.info("Successfully authenticated user '#{@username}' at '#{tgt.client_hostname}'. No service param was given, so we will not redirect.")
+            @message = {:type => 'confirmation', :message => t.notice.success_logged_in}
+          else
+            @st = generate_service_ticket(@service, @username, tgt)
+
+            begin
+              service_with_ticket = service_uri_with_ticket(@service, @st)
+
+              $LOG.info("Redirecting authenticated user '#{@username}' at '#{@st.client_hostname}' to service '#{@service}'")
+              redirect service_with_ticket, 303 # response code 303 means "See Other" (see Appendix B in CAS Protocol spec)
+            rescue URI::InvalidURIError
+              $LOG.error("The service '#{@service}' is not a valid URI!")
+              @message = {
+                :type => 'mistake',
+                :message => t.error.invalid_target_service
+              }
+            end
+          end
+        end
+        
+      end
+    end
 
 
     # Helpers
