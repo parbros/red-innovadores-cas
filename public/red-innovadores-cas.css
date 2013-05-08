@@ -29,3 +29,19 @@ input[type=text], input[type=password] {
   height: 40px;
   margin: 30px auto 0 auto;
 }
+
+@media screen and (max-width: 320px) {  
+  .container {
+    margin: 0 20px;
+  }
+  
+  input[type=text], input[type=password] { 
+    width: auto;
+  }
+  
+  #login-submit {
+    width: 100%;
+  }
+  
+}
+  

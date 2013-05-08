@@ -821,7 +821,11 @@ module CASServer
         
         # generate another login ticket to allow for re-submitting the form after a post
         @lt = generate_login_ticket.ticket
-        @service = clean_service_url("http://localhost:3000/refinery/users/service")
+        if ENV['development'] 
+          @service = clean_service_url("http://localhost:3000/refinery/users/service")
+        else
+          @service = clean_service_url("http://www.redinnovacion.org/refinery/users/service")
+        end
         
         begin
           tgt = generate_ticket_granting_ticket(@username, extra_attributes)
