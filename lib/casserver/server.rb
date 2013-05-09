@@ -320,6 +320,8 @@ module CASServer
     # 2.1.1
     get "#{uri_path}/login" do
       CASServer::Utils::log_controller_action(self.class, params)
+      
+      session['oauth'] ||= {}
 
       # make sure there's no caching
       headers['Pragma'] = 'no-cache'
