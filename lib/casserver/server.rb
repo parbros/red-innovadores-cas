@@ -17,7 +17,8 @@ module CASServer
 
     include CASServer::CAS # CAS protocol helpers
     
-    set :sessions, true
+    use Rack::Session::Cookie
+    enable :sessions
     
     use OmniAuth::Builder do
       provider :facebook, "150494841794659", "f73d40803e4deb52af325c2bd58a6ac8"
