@@ -18,7 +18,6 @@ module CASServer
     include CASServer::CAS # CAS protocol helpers
     
     use Rack::Session::Cookie
-    enable :sessions
     
     use OmniAuth::Builder do
       provider :facebook, "150494841794659", "f73d40803e4deb52af325c2bd58a6ac8"
@@ -320,8 +319,6 @@ module CASServer
     # 2.1.1
     get "#{uri_path}/login" do
       CASServer::Utils::log_controller_action(self.class, params)
-      
-      session['oauth'] ||= {}
 
       # make sure there's no caching
       headers['Pragma'] = 'no-cache'
