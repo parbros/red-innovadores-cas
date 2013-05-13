@@ -815,7 +815,7 @@ module CASServer
       
       puts auth_hash
 
-      @username = auth_info_hash['screen_name']    
+      @username = auth_info_hash['screen_name'] || auth_info_hash['username']
       if authorization
         
         
