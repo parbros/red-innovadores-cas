@@ -861,19 +861,22 @@ module CASServer
         name = extract_name(auth_info_hash["name"])
         password_salt = BCrypt::Engine.generate_salt
         password = BCrypt::Engine.hash_secret("#{@username}", password_salt)
-        user = user_model.create(
-            :first_name => name.first, 
-            :last_name => name.last, 
-            :email => "#{@username}@redinnovacion.org", 
-            username: @username, 
-            enabled: true, 
-            seen: true, 
-            rejected: 'NO', 
-            member_until: 10.year.from_now, 
-            membership_level: "Refinery::Memberships::Member",
-            registration_completed: false,
-            encrypted_password: password
-        )
+        user = user_model.where(username: @username).first
+        unless user
+          user = user_model.create(
+              :first_name => name.first, 
+              :last_name => name.last, 
+              :email => "#{@username}@redinnovacion.org", 
+              username: @username, 
+              enabled: true, 
+              seen: true, 
+              rejected: 'NO', 
+              member_until: 10.year.from_now, 
+              membership_level: "Refinery::Memberships::Member",
+              registration_completed: false,
+              encrypted_password: password
+          )
+        end
         authorization = authentication_model.create :provider => auth_hash["provider"], :uid => auth_hash["uid"], user_id: user.id
         
         begin
