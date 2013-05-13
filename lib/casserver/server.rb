@@ -812,13 +812,18 @@ module CASServer
       authorization = authentication_model.where(provider: auth_hash["provider"], uid: auth_hash["uid"]).first
         
       extra_attributes = {}
-      
-      puts auth_hash
 
-      @username = auth_info_hash['screen_name'] || auth_info_hash['username']
+      if tgc = request.cookies['tgt']
+        tgt, tgt_error = validate_ticket_granting_ticket(tgc)
+      end
+      
+      if tgt
+        @username = tgt.username
+      else
+        @username = auth_info_hash['screen_name'] || auth_info_hash['username']
+      end
+      
       if authorization
-        
-        
         # generate another login ticket to allow for re-submitting the form after a post
         @lt = generate_login_ticket.ticket
         if ENV['development'] 
