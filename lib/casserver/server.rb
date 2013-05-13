@@ -823,15 +823,15 @@ module CASServer
         @username = auth_info_hash['screen_name'] || auth_info_hash['username']
       end
       
+      # generate another login ticket to allow for re-submitting the form after a post
+      @lt = generate_login_ticket.ticket
+      if ENV['development'] 
+        @service = clean_service_url("http://localhost:3000/refinery/users/service")
+      else
+        @service = clean_service_url("http://www.redinnovacion.org/refinery/users/service")
+      end
+      
       if authorization
-        # generate another login ticket to allow for re-submitting the form after a post
-        @lt = generate_login_ticket.ticket
-        if ENV['development'] 
-          @service = clean_service_url("http://localhost:3000/refinery/users/service")
-        else
-          @service = clean_service_url("http://www.redinnovacion.org/refinery/users/service")
-        end
-        
         begin
           tgt = generate_ticket_granting_ticket(@username, extra_attributes)
           response.set_cookie('tgt', tgt.to_s)
