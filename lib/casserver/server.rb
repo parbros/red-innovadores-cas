@@ -908,8 +908,9 @@ module CASServer
             end
           end
         end
-        
       end
+
+      render @template_engine, :login
     end
 
 
