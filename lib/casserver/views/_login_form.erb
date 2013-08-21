@@ -2,7 +2,7 @@
 <form method="post" action="<%= @form_action || "login" %>" id="login-form" onsubmit="submitbutton = document.getElementById('login-submit'); submitbutton.value='<%= t.notice.please_wait %>'; submitbutton.disabled=true; return true;">
   
   
-  <input type="text" id="username" name="username" size="32" tabindex="1" accesskey="u" placeholder="Nombre de usuario" />
+  <input type="text" id="username" name="username" size="32" tabindex="1" accesskey="u" placeholder="Nombre de usuario o Email" />
   <input type="password" id="password" name="password" size="32" tabindex="2" accesskey="p" autocomplete="off" placeholder="Contraseña" />
   
   <input type="hidden" id="lt" name="lt" value="<%= escape_html @lt %>" />

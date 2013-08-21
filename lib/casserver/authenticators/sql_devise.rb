@@ -16,7 +16,7 @@ class CASServer::Authenticators::SQLDevise < CASServer::Authenticators::SQL
     username_column = @options[:username_column] || "username"
     password_column = @options[:password_column] || "encrypted_password"
 
-    results = user_model.find(:all, :conditions => ["#{username_column} = ?", @username])
+    results = user_model.find(:all, :conditions => ["#{username_column} = ? or email = ?", @username, @username])
     
     puts "#{username_column} = #{@username}"
 
