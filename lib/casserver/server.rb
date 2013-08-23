@@ -468,6 +468,7 @@ module CASServer
           
           
           if credentials_are_valid
+            @username = auth.get_username(@username)
             @authenticated = true
             @authenticated_username = @username
             extra_attributes.merge!(auth.extra_attributes) unless auth.extra_attributes.blank?

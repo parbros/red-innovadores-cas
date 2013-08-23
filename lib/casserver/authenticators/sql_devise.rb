@@ -36,6 +36,18 @@ class CASServer::Authenticators::SQLDevise < CASServer::Authenticators::SQL
 
     false
   end
+  
+  def get_username(username)
+    user_model = self.class.user_model
+    
+    results = user_model.find(:all, :conditions => ["username = ? or email = ?", username, username])
+    
+    if results.size > 0 
+      results.first.username
+    else
+      false
+    end
+  end
 
   protected
 
